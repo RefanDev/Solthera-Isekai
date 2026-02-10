@@ -1,0 +1,214 @@
+:: First Tutorial
+    You walk for a few minutes in the forest and accidentally find a fragile wooden sword lying on the ground. It looks old and worn, but it's better than nothing.
+
+    > 💡 //A weapon! This could be useful against monsters.//
+
+    What do you want to do?
+
+[[🗡️ Grab the Wooden Sword->Get Wooden Sword]]
+[[➡️ Ignore it and continue walking->First Tutorial 2]]
+
+:: Get Wooden Sword
+<<set _woodenSword = {
+    id: "wooden_sword",
+    name: "Wooden Sword",
+    type: "weapon",
+    icon: "🗡️",
+    attack: 5,
+    durability: 10,
+    maxDurability: 10,
+    description: "A fragile wooden sword. Better than nothing."
+}>>
+<<run addItem(_woodenSword)>>
+<<run equipWeapon($inventory[$inventory.length - 1].uid)>>
+
+You pick up the wooden sword. It feels light and a bit fragile, but at least now you have something to defend yourself with.
+
+> ✅ **Obtained: Wooden Sword** (+5 ATK)
+> ⚠️ //Durability: 10/10 - Handle with care!//
+
+The sword has been added to your inventory and automatically equipped.
+
+[[➡️ Continue walking->First Tutorial 2]]
+
+:: First Tutorial 2
+You continue walking deeper into the forest. The air feels damp and slightly eerie.
+
+Suddenly, something jumps out from behind the bushes!
+
+<<set $enemy = {
+    name: "Slime",
+    level: 1,
+    hp: 20,
+    maxHp: 20,
+    attack: 5,
+    exp: 10,
+    gold: 5
+}>>
+
+🟢 **Slime Level 1** appears before you!
+
+> HP: <<print $enemy.hp>> / <<print $enemy.maxHp>>
+> ATK: <<print $enemy.attack>>
+
+The green jelly-like creature stares at you with... wait, is that an eye? Either way, it's moving toward you.
+
+---
+
+**What will you do?**
+
+[[⚔️ Fight the Slime!->Battle Slime]]
+[[🏃 Run away!->Try Escape]]
+
+:: Try Escape
+You turn around and run as fast as you can!
+
+//SPLASH!//
+
+Something slimy and sticky lands on your back. The slime was faster than you expected!
+
+> 💬 *"BLOOP BLOOP!"* (Where do you think you're going, human?!)
+
+You fall down and are forced to face the slime.
+
+<<set $player.hp -= 5>>
+
+⚠️ **You got hurt from the fall! HP -5**
+
+---
+
+[[😤 Forced to fight!->Battle Slime]]
+
+:: Battle Slime
+<<if $enemy.hp <= 0>>
+    <<goto "Battle Victory">>
+<</if>>
+
+== ⚔️ BATTLE: vs <<print $enemy.name>> Lv.<<print $enemy.level>> ==
+
+**Your Status:**
+- ❤️ HP: <<print $player.hp>> / <<print $player.maxHp>>
+- ⚡ Energy: <<print $player.energy>> / <<print $player.maxEnergy>>
+<<if $equippedWeapon>>
+- 🗡️ Weapon: <<print $equippedWeapon.name>> (<<print $equippedWeapon.durability>>/<<print $equippedWeapon.maxDurability>>)
+<</if>>
+
+---
+
+**Enemy Status:**
+- 🟢 <<print $enemy.name>>
+- ❤️ HP: <<print $enemy.hp>> / <<print $enemy.maxHp>>
+
+---
+
+**Choose Action:**
+
+[[🗡️ Attack!->Attack Slime]]
+[[🛡️ Defend->Defend Slime]]
+
+:: Attack Slime
+<<set _baseAttack = 5>>
+<<if $equippedWeapon>>
+    <<set _baseAttack += $equippedWeapon.attack>>
+<</if>>
+<<set _playerDamage = random(Math.floor(_baseAttack * 0.8), _baseAttack)>>
+<<set $enemy.hp -= _playerDamage>>
+
+⚔️ //SLASH!//
+
+You attack <<print $enemy.name>> and deal **<<print _playerDamage>> damage**!
+
+<<if $equippedWeapon>>
+    <<set _weaponBroke = reduceDurability(1)>>
+    <<if _weaponBroke>>
+        
+💔 **Your <<print "Wooden Sword">> broke!**
+You'll have to fight with bare hands now!
+
+    <</if>>
+<</if>>
+
+<<if $enemy.hp <= 0>>
+    <<set $enemy.hp = 0>>
+    
+    🎉 **<<print $enemy.name>> has been defeated!**
+    
+    [[🏆 See Battle Results->Battle Victory]]
+<<else>>
+    <<set _enemyDamage = random(3, $enemy.attack)>>
+    <<set $player.hp -= _enemyDamage>>
+    
+    <<if $player.hp <= 0>>
+        <<set $player.hp = 0>>
+        [[💀 You Lost...->Game Over]]
+    <<else>>
+        💥 <<print $enemy.name>> counterattacks! You take **<<print _enemyDamage>> damage**!
+        
+        [[➡️ Continue Battle->Battle Slime]]
+    <</if>>
+<</if>>
+
+:: Defend Slime
+<<set _reducedDamage = Math.floor(random(1, $enemy.attack) / 2)>>
+<<set $player.hp -= _reducedDamage>>
+
+🛡️ You take a defensive stance!
+
+<<print $enemy.name>> attacks, but you managed to reduce the damage!
+You only take **<<print _reducedDamage>> damage**.
+
+<<if $player.hp <= 0>>
+    <<set $player.hp = 0>>
+    [[💀 You Lost...->Game Over]]
+<<else>>
+    [[➡️ Continue Battle->Battle Slime]]
+<</if>>
+
+:: Battle Victory
+🎊 **VICTORY!** 🎊
+
+You defeated <<print $enemy.name>> Level <<print $enemy.level>>!
+
+---
+
+**Rewards:**
+<<set $player.gold += $enemy.gold>>
+- 💰 Gold: +<<print $enemy.gold>> (Total: <<print $player.gold>>)
+
+<<if not $questFlags.firstBattle>>
+    <<set $questFlags.firstBattle = true>>
+    
+    > 🏅 **Achievement Unlocked: "Novice Slime Hunter"**
+    > You won your first battle!
+<</if>>
+
+---
+
+The slime melts into a green puddle that slowly seeps into the ground. You take a deep breath.
+
+> 💬 "Not bad for a first fight," you think.
+
+---
+
+[[🌲 Continue exploring->Oak Forest 2]]
+[[🔄 Keep exploring (Battle Again)->First Tutorial 2]]
+
+:: Game Over
+💀 **GAME OVER** 💀
+
+Your HP reached 0. The world goes dark...
+
+---
+
+Suddenly, you wake up at the edge of the forest. Someone must have helped you.
+
+<<set $player.hp = Math.floor($player.maxHp / 2)>>
+<<set $player.gold = Math.floor($player.gold / 2)>>
+
+> ⚠️ You lost half of your Gold!
+> ❤️ HP restored to: <<print $player.hp>>
+> 💰 Gold remaining: <<print $player.gold>>
+
+---
+
+[[😔 Return to Forest->First Tutorial 2]]
